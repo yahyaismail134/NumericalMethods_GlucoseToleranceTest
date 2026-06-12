@@ -1,155 +1,347 @@
-# Diabetes Glucose Tolerance Test: Numerical and Machine Learning Solutions of a Biomedical ODE System
+# Numerical Methods and Physics-Informed Neural Networks for an Apoptosis ODE Model
 
-**SBEG108 – Numerical Methods in Biomedical Engineering**
-**Faculty of Engineering, Cairo University**
-
----
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-PINN-red)
+![SciPy](https://img.shields.io/badge/SciPy-LSODA-green)
+![Status](https://img.shields.io/badge/Status-Completed-success)
 
 ## Overview
 
-This project investigates the Diabetes Glucose Tolerance Test (GTT) using a coupled glucose-insulin ordinary differential equation (ODE) model from Schiesser's *Differential Equation Analysis in Biomedical Science and Engineering*.
+This project investigates the numerical solution of a biomedical apoptosis model using both classical numerical methods and modern machine learning techniques.
 
-The project reproduces the textbook results and compares classical numerical methods with a modern machine-learning-based approach for solving the same biomedical dynamical system.
+The apoptosis system is represented as a coupled system of Ordinary Differential Equations (ODEs) describing the interaction between key biological variables involved in cell survival and programmed cell death.
 
----
+Four different solution approaches are studied and compared:
 
-## Project Objectives
+- **LSODA** (Reference Solution)
+- **Euler Method**
+- **Runge-Kutta 4th Order (RK4)**
+- **Physics-Informed Neural Network (PINN)**
 
-* Reproduce the reference solution presented in Chapter 2.
-* Implement two numerical methods from scratch.
-* Implement a Physics-Informed Neural Network (PINN).
-* Compare the methods in terms of:
-
-  * Accuracy
-  * Runtime
-  * Stability
-  * Solution quality
+The goal is to evaluate the accuracy, stability, and behavior of each method when solving the same biomedical ODE system under multiple experimental conditions.
 
 ---
 
-## ODE Model
+## Biological Model
 
-The glucose-insulin system is represented by a set of coupled ordinary differential equations describing the evolution of:
+The model describes the dynamics of six interacting biological variables:
 
-* Glucose concentration **G(t)**
-* Insulin concentration **I(t)**
+| Variable | Description |
+|-----------|------------|
+| HIF-1α | Hypoxia-Inducible Factor |
+| O₂ / ROS | Oxygen / Reactive Oxygen Species |
+| p300 | Transcription Co-Activator |
+| p53 | Tumor Suppressor Protein |
+| Caspase | Apoptosis Effector |
+| K⁺ | Potassium Dynamics |
 
-The simulation begins from the fasting state and models the body's response after glucose administration during a glucose tolerance test.
+These variables are coupled through nonlinear differential equations representing cellular responses to hypoxia and apoptosis signaling pathways.
 
-### Initial Conditions
+---
+
+## Experimental Cases
+
+Three different scenarios were investigated:
+
+### Case 1 — Base Parameters
+
+Reference apoptosis model using the original parameter set.
+
+**Initial Condition**
 
 ```text
-G(0) = 81.14
-I(0) = 5.671
+y_hif(0) = 1
 ```
 
 ---
 
-## Methods
+### Case 2 — Initial Condition Independence
 
-### LSODA (Reference Solution)
+Tests system behavior when all state variables start from zero.
 
-Adaptive ODE solver used to reproduce the textbook results and provide a reference solution.
-
-### Forward Euler Method
-
-First-order numerical integration method implemented from scratch.
-
-### Runge-Kutta Fourth Order (RK4)
-
-Fourth-order numerical integration method implemented from scratch.
-
-### Physics-Informed Neural Network (PINN)
-
-A neural network trained using:
-
-* ODE residual loss
-* Initial condition loss
-
-The PINN learns continuous glucose and insulin trajectories while satisfying the governing differential equations.
-
----
-
-## Comparison Metrics
-
-The methods will be evaluated using:
-
-* Mean Absolute Error (MAE)
-* Root Mean Square Error (RMSE)
-* Runtime
-* Stability
-* Visual agreement with the reference solution
-
----
-
-## Repository Structure
+**Initial Conditions**
 
 ```text
-src/
-├── lsoda/
+All state variables = 0
+```
+
+---
+
+### Case 3 — Time-Varying Coupling
+
+Investigates the effect of a decaying coupling parameter α₁₂.
+
+```text
+α₁₂ = α₁₂(t)
+```
+
+This case examines how parameter variation influences apoptosis dynamics.
+
+---
+
+# Methods
+
+## 1. LSODA (Reference Solver)
+
+LSODA is an adaptive numerical ODE solver from the ODEPACK library.
+
+Features:
+
+- Automatic step-size control
+- Automatic stiffness detection
+- High numerical accuracy
+- Used as the reference solution
+
+Implementation:
+
+```text
+lsoda/lsoda_apoptosis.py
+```
+
+---
+
+## 2. Euler Method
+
+The Forward Euler method is the simplest explicit numerical integration scheme.
+
+Formula:
+
+yₙ₊₁ = yₙ + h f(tₙ,yₙ)
+
+Characteristics:
+
+- First-order accuracy
+- Fast computation
+- Simple implementation
+- Sensitive to step size
+
+Step sizes tested:
+
+- h = 0.01
+- h = 0.1
+
+Implementation:
+
+```text
+euler/
+```
+
+---
+
+## 3. Runge-Kutta 4th Order (RK4)
+
+RK4 is a classical high-accuracy numerical integration method.
+
+Characteristics:
+
+- Fourth-order accuracy
+- Stable for small step sizes
+- Widely used in scientific computing
+
+Implementation:
+
+```text
+rk4/
+```
+
+---
+
+## 4. Physics-Informed Neural Network (PINN)
+
+A Physics-Informed Neural Network (PINN) is used to solve the ODE system without traditional numerical time stepping.
+
+Instead of learning from a dataset, the neural network learns a function that satisfies:
+
+- The governing differential equations
+- The initial conditions
+
+### PINN Loss Function
+
+Loss = ODE Residual Error + Initial Condition Error
+
+The network:
+
+Input:
+
+```text
+t
+```
+
+Output:
+
+```text
+[HIF, O₂, p300, p53, Caspase, K⁺]
+```
+
+Automatic differentiation is used to compute derivatives and enforce the governing physics during training.
+
+Implementation:
+
+```text
+pinn/
+```
+
+---
+
+# Repository Structure
+
+```text
+NumericalMethods_GlucoseToleranceTest/
+│
 ├── euler/
+│   ├── figures/
+│   └── results/
+│
 ├── rk4/
-└── pinn/
-
-figures/
-results/
-report/
-presentation/
-references/
+│   ├── figures/
+│   └── results/
+│
+├── lsoda/
+│   ├── figures/
+│   ├── results/
+│   └── lsoda_apoptosis.py
+│
+├── pinn/
+│   ├── cases/
+│   ├── figures/
+│   ├── results/
+│   ├── model.py
+│   ├── physics.py
+│   └── plot.py
+│
+└── README.md
 ```
 
-### Folder Descriptions
+---
 
-| Folder       | Purpose                                 |
-| ------------ | --------------------------------------- |
-| src          | Source code for all methods             |
-| figures      | Generated plots and visualizations      |
-| results      | Numerical outputs and comparison tables |
-| report       | IEEE project report                     |
-| presentation | Presentation slides                     |
-| references   | Supporting papers and literature        |
+# Results
+
+## LSODA Reference Solutions
+
+### Six-Variable Apoptosis Dynamics
+
+![LSODA 6 Variables](lsoda/figures/lsoda_6vars.png)
 
 ---
 
-## Results
+### Initial Condition Comparison
 
-Results will be added after implementation and testing.
-
-### Planned Outputs
-
-* Glucose concentration vs time
-* Insulin concentration vs time
-* Error comparison tables
-* Runtime comparison tables
-* PINN training curves
+![LSODA IC Comparison](lsoda/figures/lsoda_ic_comparison.png)
 
 ---
 
-## Extended Results
+### Time-Varying α₁₂ Analysis
 
-Additional material that does not fit in the 4-page report will be included here:
-
-* Convergence studies
-* Additional simulation cases
-* PINN training history
-* Sensitivity analysis
-* Raw numerical outputs
+![LSODA a12 Variation](lsoda/figures/lsoda_a12_variation.png)
 
 ---
 
-## Future Work
+## Euler Method
 
-Potential future extensions include:
+### h = 0.01
 
-* Neural ODEs
-* Patient-specific parameter estimation
-* Real clinical glucose datasets
-* Hybrid physics-machine-learning models
+![Euler h001](euler/figures/euler_all_cases_h001.png)
 
 ---
 
-## Team
+### h = 0.1
 
-Faculty of Engineering, Cairo University
+![Euler h01](euler/figures/euler_all_cases_h01.png)
 
-Biomedical Engineering Department
+---
+
+## Runge-Kutta 4th Order
+
+### RK4 Solution
+
+![RK4](rk4/figures/rk4_all_cases_h001.png)
+
+---
+
+## Physics-Informed Neural Network
+
+### PINN — All Cases
+
+![PINN All Cases](pinn/figures/pinn_all_cases.png)
+
+---
+
+### Case 1 vs RKF45
+
+![PINN Case 1](pinn/figures/pinn_case1_vs_rkf45.png)
+
+---
+
+### Case 2 vs RKF45
+
+![PINN Case 2](pinn/figures/pinn_case2_vs_rkf45.png)
+
+---
+
+### Case 3 vs RKF45
+
+![PINN Case 3](pinn/figures/pinn_case3_vs_rkf45.png)
+
+---
+
+# Key Findings
+
+- LSODA provides a highly accurate reference solution for the apoptosis model.
+- Euler successfully captures system behavior but is sensitive to step size.
+- RK4 achieves significantly higher accuracy than Euler while remaining computationally efficient.
+- PINNs accurately reproduce the dynamics of all six biological variables.
+- Relative errors between PINN predictions and RKF45 reference solutions remain below 0.3% across all investigated cases.
+
+---
+
+# Requirements
+
+Install dependencies:
+
+```bash
+pip install numpy scipy matplotlib pandas torch
+```
+
+---
+
+# Running the Project
+
+### LSODA
+
+```bash
+python lsoda_apoptosis.py
+```
+
+### PINN Training
+
+```bash
+python train_case1.py
+python train_case2.py
+python train_case3.py
+```
+
+### Generate Evaluation Plots
+
+```bash
+python plot.py
+```
+
+---
+
+# References
+
+William E. Schiesser
+
+**Differential Equation Analysis in Biomedical Science and Engineering**
+
+Chapter: Apoptosis ODE Model
+
+---
+
+# Authors
+
+Numerical Methods Project
+
+Faculty of Engineering
+
+Biomedical Engineering / Scientific Computing
